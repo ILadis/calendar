@@ -1,0 +1,7 @@
+{
+  "description": "A ready to deploy CalDAV server based on sabre.io",
+  "type": "project",
+  "require": {
+    "sabre/dav": "~4.0.1"
+  }
+}
