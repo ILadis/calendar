@@ -1,6 +1,9 @@
 {
   "description": "A ready to deploy CalDAV server based on sabre.io",
   "type": "project",
+  "autoload": {
+    "psr-4": { "CalDAV\\": "src/" }
+  },
   "require": {
     "sabre/dav": "~4.0.1"
   }
