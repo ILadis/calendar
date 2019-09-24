@@ -1,7 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-$cwd = getcwd();
 $readonly = boolval(ini_get('phar.readonly'));
 if ($readonly) {
   echo 'Cannot build Phar when readonly flag is set!';
@@ -9,21 +8,16 @@ if ($readonly) {
 }
 
 $phar = new Phar('calendar.phar');
+$phar->setDefaultStub('index.php');
 
 $phar->buildFromDirectory(__DIR__, '/vendor/');
 $phar->buildFromDirectory(__DIR__, '/src/');
 
-$phar->addFile('index.php');
-$phar->addFromString('properties.php', <<<EOF
+$phar->addFromString('index.php', <<<EOF
 <?php
-
-class Properties {
-  const PDO_PATH = '$cwd/db.sqlite';
-}
-
+require_once __DIR__ . '/vendor/autoload.php';
+CalDAV\Server::run();
 ?>
 EOF);
-
-$phar->setDefaultStub('index.php');
 
 ?>
