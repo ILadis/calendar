@@ -15,7 +15,7 @@ class SetupPlugin extends ServerPlugin {
 
   public function __construct(PDO $pdo) {
     $this->pdo = $pdo;
-    $this->logger = ConsoleLogger::for(TestPlugin::class);
+    $this->logger = ConsoleLogger::for(SetupPlugin::class);
   }
 
   public function initialize(Server $server) {
