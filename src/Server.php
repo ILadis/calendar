@@ -4,7 +4,10 @@ namespace CalDAV;
 
 class Server {
 
-  public static function run($pdo) {
+  public static function run() {
+    $pdo = new \PDO('sqlite:db.sqlite');
+    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
     $storageBackend = new \Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
     $calendarBackend = new \Sabre\CalDAV\Backend\PDO($pdo);
     $principalBackend = new \Sabre\DAVACL\PrincipalBackend\PDO($pdo);
@@ -35,6 +38,12 @@ class Server {
 
     $browserPlugin = new \Sabre\DAV\Browser\Plugin();
     $server->addPlugin($browserPlugin);
+
+    $setupPlugin = new SetupPlugin($pdo);
+    $server->addPlugin($setupPlugin);
+
+    $logPlugin = new LogPlugin();
+    $server->addPlugin($logPlugin);
 
     $server->exec();
   }
