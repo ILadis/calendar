@@ -7,11 +7,13 @@ if ($readonly) {
   exit(1);
 }
 
-$phar = new Phar('calendar.phar');
+$rootdir = realpath(__DIR__ . '/..');
+
+$phar = new Phar("{$rootdir}/calendar.phar");
 $phar->setDefaultStub('index.php');
 
-$phar->buildFromDirectory(__DIR__, '/vendor/');
-$phar->buildFromDirectory(__DIR__, '/src/');
+$phar->buildFromDirectory($rootdir, '/vendor/');
+$phar->buildFromDirectory($rootdir, '/src/');
 
 $phar->addFromString('index.php', <<<EOF
 <?php
