@@ -1,3 +1,10 @@
+CREATE TABLE registrations (
+  id integer primary key asc NOT NULL,
+  username TEXT NOT NULL,
+  completed TEXT,
+  UNIQUE(username)
+);
+
 CREATE TABLE users (
   id integer primary key asc NOT NULL,
   username TEXT NOT NULL,
@@ -14,7 +21,7 @@ CREATE TABLE calendars (
 CREATE TABLE calendarinstances (
   id integer primary key asc NOT NULL,
   calendarid integer NOT NULL,
-  principaluri text NULL,
+  principaluri text NOT NULL,
   access integer NOT NULL DEFAULT '1',
   displayname text,
   uri text NOT NULL,

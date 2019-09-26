@@ -41,6 +41,10 @@ class Server {
     $setupPlugin = new \CalDAV\Setup\Plugin($setupBackend);
     $server->addPlugin($setupPlugin);
 
+    $registerBackend = new \CalDAV\Registrations\Backend\PDO($pdo);
+    $registerPlugin = new \CalDAV\Registrations\Plugin($registerBackend, $authBackend);
+    $server->addPlugin($registerPlugin);
+
     $logPlugin = new \CalDAV\Logging\Plugin();
     $server->addPlugin($logPlugin);
 

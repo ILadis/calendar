@@ -25,7 +25,8 @@ class Plugin extends ServerPlugin {
   }
 
   public function initSchema(): void {
-    if (!$this->backend->hasSchema()) {
+    $exists = $this->backend->hasSchema();
+    if (!$exists) {
       $this->logger->info('Creating database schema');
       $this->backend->createSchema();
       $this->logger->info('Successfully created database schema');

@@ -2,7 +2,6 @@
 
 namespace CalDAV;
 
-use DateTime;
 use Psr\Log\AbstractLogger;
 
 class ConsoleLogger extends AbstractLogger {
@@ -26,7 +25,7 @@ class ConsoleLogger extends AbstractLogger {
   }
 
   private function currentDateTime(): string {
-    $now = new DateTime();
+    $now = new \DateTime();
     $date = $now->format('Y-m-d H:i:s:v');
     return $date;
   }
