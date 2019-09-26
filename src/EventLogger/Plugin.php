@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\RequestLogger;
+namespace CalDAV\EventLogger;
 
 use CalDAV\ConsoleLogger;
 
@@ -18,10 +18,10 @@ class Plugin extends ServerPlugin {
   }
 
   public function initialize(Server $server) {
-    $server->on('method:*', [$this, 'doLogging']);
+    $server->on('method:*', [$this, 'logRequest']);
   }
 
-  public function doLogging(RequestInterface $request, ResponseInterface $response) {
+  public function logRequest(RequestInterface $request): void {
     $base = $request->getBaseUrl();
     $path = $request->getPath();
     $method = $request->getMethod();

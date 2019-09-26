@@ -7,13 +7,13 @@ use Psr\Log\AbstractLogger;
 
 class ConsoleLogger extends AbstractLogger {
 
-  public static function for($name) {
+  public static function for(string $name) {
     return new ConsoleLogger($name);
   }
 
   private $name = null;
 
-  private function __construct($name) {
+  private function __construct(string $name) {
     $this->name = $name;
   }
 
@@ -25,7 +25,7 @@ class ConsoleLogger extends AbstractLogger {
     file_put_contents('php://stdout', $log);
   }
 
-  private function currentDateTime() {
+  private function currentDateTime(): string {
     $now = new DateTime();
     $date = $now->format('Y-m-d H:i:s:v');
     return $date;

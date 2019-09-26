@@ -45,7 +45,7 @@ class Server {
     $autoPlugin = new \CalDAV\AutoUser\Plugin($autoBackend, $authBackend);
     $server->addPlugin($autoPlugin);
 
-    $logPlugin = new \CalDAV\RequestLogger\Plugin();
+    $logPlugin = new \CalDAV\EventLogger\Plugin();
     $server->addPlugin($logPlugin);
 
     $server->exec();
