@@ -8,14 +8,8 @@ class Server {
     $pdo = new \PDO('sqlite:db.sqlite');
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-    $storageBackend = new \Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
-    $calendarBackend = new \Sabre\CalDAV\Backend\PDO($pdo);
     $principalBackend = new \Sabre\DAVACL\PrincipalBackend\PDO($pdo);
-
-    $authBackend = new \Sabre\DAV\Auth\Backend\PDO($pdo);
-    $authBackend->setRealm('SabreDAV');
-
-    $setupBackend = new \CalDAV\Setup\Backend\PDO($pdo);
+    $calendarBackend = new \Sabre\CalDAV\Backend\PDO($pdo);
 
     $server = new \Sabre\DAV\Server([
       new \Sabre\CalDAV\Principal\Collection($principalBackend),
@@ -23,6 +17,8 @@ class Server {
     ]);
     $server->setBaseUri('/calendar');
 
+    $authBackend = new \Sabre\DAV\Auth\Backend\PDO($pdo);
+    $authBackend->setRealm('SabreDAV');
     $authPlugin = new \Sabre\DAV\Auth\Plugin($authBackend);
     $server->addPlugin($authPlugin);
 
@@ -32,7 +28,8 @@ class Server {
     $caldavPlugin = new \Sabre\CalDAV\Plugin();
     $server->addPlugin($caldavPlugin);
 
-    $propPlugin = new \Sabre\DAV\PropertyStorage\Plugin($storageBackend);
+    $propBackend = new \Sabre\DAV\PropertyStorage\Backend\PDO($pdo);
+    $propPlugin = new \Sabre\DAV\PropertyStorage\Plugin($propBackend);
     $server->addPlugin($propPlugin);
 
     $syncPlugin = new \Sabre\DAV\Sync\Plugin();
@@ -41,10 +38,11 @@ class Server {
     $browserPlugin = new \Sabre\DAV\Browser\Plugin();
     $server->addPlugin($browserPlugin);
 
-    $setupPlugin = new \CalDAV\Setup\SetupPlugin($setupBackend);
-    $server->addPlugin($setupPlugin);
+    $initBackend = new \CalDAV\InitSchema\Backend\PDO($pdo);
+    $initPlugin = new \CalDAV\InitSchema\Plugin($initBackend);
+    $server->addPlugin($initPlugin);
 
-    $logPlugin = new \CalDAV\Log\LogPlugin();
+    $logPlugin = new \CalDAV\RequestLogger\Plugin();
     $server->addPlugin($logPlugin);
 
     $server->exec();

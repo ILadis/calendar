@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\Setup\Backend;
+namespace CalDAV\InitSchema\Backend;
 
 class PDO implements BackendInterface {
 
