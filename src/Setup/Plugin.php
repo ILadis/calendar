@@ -1,9 +1,9 @@
 <?php
 
-namespace CalDAV\InitSchema;
+namespace CalDAV\Setup;
 
 use CalDAV\ConsoleLogger;
-use CalDAV\InitSchema;
+use CalDAV\Setup;
 
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
@@ -15,7 +15,7 @@ class Plugin extends ServerPlugin {
   private $backend = null;
   private $logger = null;
 
-  public function __construct(InitSchema\Backend\BackendInterface $backend) {
+  public function __construct(Setup\Backend\BackendInterface $backend) {
     $this->backend = $backend;
     $this->logger = ConsoleLogger::for(Plugin::class);
   }

@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\EventLogger;
+namespace CalDAV\Logging;
 
 use CalDAV\ConsoleLogger;
 

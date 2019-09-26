@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\InitSchema\Backend;
+namespace CalDAV\Setup\Backend;
 
 interface BackendInterface {
   public function hasSchema(): bool;
