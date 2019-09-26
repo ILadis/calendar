@@ -15,6 +15,8 @@ class Server {
     $authBackend = new \Sabre\DAV\Auth\Backend\PDO($pdo);
     $authBackend->setRealm('SabreDAV');
 
+    $setupBackend = new \CalDAV\Setup\Backend\PDO($pdo);
+
     $server = new \Sabre\DAV\Server([
       new \Sabre\CalDAV\Principal\Collection($principalBackend),
       new \Sabre\CalDAV\CalendarRoot($principalBackend, $calendarBackend),
@@ -39,10 +41,10 @@ class Server {
     $browserPlugin = new \Sabre\DAV\Browser\Plugin();
     $server->addPlugin($browserPlugin);
 
-    $setupPlugin = new SetupPlugin($pdo);
+    $setupPlugin = new \CalDAV\Setup\SetupPlugin($setupBackend);
     $server->addPlugin($setupPlugin);
 
-    $logPlugin = new LogPlugin();
+    $logPlugin = new \CalDAV\Log\LogPlugin();
     $server->addPlugin($logPlugin);
 
     $server->exec();

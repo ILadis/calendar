@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV;
+namespace CalDAV\Log;
 
 use DateTime;
 use Psr\Log\AbstractLogger;

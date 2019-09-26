@@ -1,5 +1,6 @@
 <?php 
-namespace CalDAV;
+
+namespace CalDAV\Log;
 
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
