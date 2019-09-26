@@ -1,7 +1,7 @@
 CREATE TABLE users (
   id integer primary key asc NOT NULL,
   username TEXT NOT NULL,
-  digesta1 TEXT NOT NULL,
+  password TEXT NOT NULL,
   UNIQUE(username)
 );
 
