@@ -8,12 +8,15 @@ if ($readonly) {
 }
 
 $rootdir = realpath(__DIR__ . '/..');
+$iteratorOf = function(string $folder) use ($rootdir): Iterator {
+  return new RecursiveIteratorIterator(new RecursiveDirectoryIterator($rootdir . $folder));
+};
 
 $phar = new Phar("{$rootdir}/calendar.phar");
 $phar->setDefaultStub('index.php');
 
-$phar->buildFromDirectory($rootdir, '/vendor/');
-$phar->buildFromDirectory($rootdir, '/src/');
+$phar->buildFromIterator($iteratorOf('/vendor'), $rootdir);
+$phar->buildFromIterator($iteratorOf('/vendor'), $rootdir);
 
 $phar->addFromString('index.php', <<<EOF
 <?php
