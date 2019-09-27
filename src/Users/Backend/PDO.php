@@ -4,6 +4,9 @@ namespace CalDAV\Users\Backend;
 
 use Sabre\DAV\Auth\Backend\AbstractBasic;
 
+use Sabre\HTTP\RequestInterface;
+use Sabre\HTTP\ResponseInterface;
+
 class PDO extends AbstractBasic implements BackendInterface {
 
   private $pdo = null;
@@ -12,6 +15,16 @@ class PDO extends AbstractBasic implements BackendInterface {
   public function __construct(\PDO $pdo) {
     $this->pdo = $pdo;
     $this->realm = 'CalDAV';
+  }
+
+  public function check(RequestInterface $request, ResponseInterface $response) {
+    $result = parent::check($request, $response);
+
+    if ($result[0]) {
+      $result[1] = strtolower($result[1]);
+    }
+
+    return $result;
   }
 
   public function createNewUser(string $username, string $password): bool {
