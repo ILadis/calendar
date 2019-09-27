@@ -25,4 +25,6 @@ CalDAV\Server::run();
 ?>
 EOF);
 
+$phar->convertToExecutable(Phar::TAR, Phar::GZ, '.phar.tgz');
+
 ?>
