@@ -1,0 +1,73 @@
+#!/bin/bash
+
+function hash { sha256sum "${1}" | head -c 64; }
+
+mkdir 'target'
+zip -r 'target/sources.zip' . -x 'target/*' '.git/*'
+cd 'target'
+
+cat << EOF > 'caldav.service'
+[Unit]
+Description=caldav
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=caldav
+Group=caldav
+WorkingDirectory=/var/lib/caldav
+ExecStart=php -S localhost:6443 /usr/lib/caldav/caldav.phar
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat << EOF > 'sysusers.conf'
+u caldav - - / /usr/bin/nologin
+EOF
+
+cat << EOF > 'tmpfiles.conf'
+d /var/lib/caldav 0750 caldav caldav -
+EOF
+
+cat << EOF > 'PKGBUILD'
+pkgname='caldav'
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='A ready to deploy CalDAV server based on SabreDAV'
+arch=('any')
+depends=('php' 'php-sqlite')
+makedepends=('composer')
+
+license=('custom')
+url='https://github.com/ILadis/calendar'
+
+source=(
+  'sysusers.conf'
+  'tmpfiles.conf'
+  'caldav.service'
+  'sources.zip')
+
+sha256sums=(
+  "$(hash 'sysusers.conf')"
+  "$(hash 'tmpfiles.conf')"
+  "$(hash 'caldav.service')"
+  "$(hash 'sources.zip')")
+
+package() {
+  cd "\${srcdir}"
+
+  composer install
+
+  php 'bin/build'
+  install -Dm 644 'calendar.phar' "\${pkgdir}/usr/lib/caldav/caldav.phar"
+
+  install -Dm 644 'sysusers.conf' "\${pkgdir}/usr/lib/sysusers.d/caldav.conf"
+  install -Dm 644 'tmpfiles.conf' "\${pkgdir}/usr/lib/tmpfiles.d/caldav.conf"
+  install -Dm 644 'caldav.service' "\${pkgdir}/usr/lib/systemd/system/caldav.service"
+}
+EOF
+
+makepkg -c PKGBUILD

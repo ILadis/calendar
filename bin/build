@@ -16,7 +16,7 @@ $phar = new Phar("{$rootdir}/calendar.phar");
 $phar->setDefaultStub('index.php');
 
 $phar->buildFromIterator($iteratorOf('/vendor'), $rootdir);
-$phar->buildFromIterator($iteratorOf('/vendor'), $rootdir);
+$phar->buildFromIterator($iteratorOf('/src'), $rootdir);
 
 $phar->addFromString('index.php', <<<EOF
 <?php
