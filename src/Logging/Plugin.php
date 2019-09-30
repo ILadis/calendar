@@ -7,7 +7,6 @@ use CalDAV\ConsoleLogger;
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
 use Sabre\HTTP\RequestInterface;
-use Sabre\HTTP\ResponseInterface;
 
 class Plugin extends ServerPlugin {
 
