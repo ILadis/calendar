@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\Registrations\Backend;
+namespace CalDAV\Registration\Backend;
 
 interface BackendInterface {
   public function isPending(string $username): bool;

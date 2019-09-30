@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\Users\Backend;
+namespace CalDAV\User\Backend;
 
 use Sabre\DAV\Auth\Backend\AbstractBasic;
 

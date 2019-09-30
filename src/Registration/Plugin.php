@@ -1,10 +1,10 @@
 <?php
 
-namespace CalDAV\Registrations;
+namespace CalDAV\Registration;
 
 use CalDAV\ConsoleLogger;
-use CalDAV\Registrations;
-use CalDAV\Users;
+use CalDAV\Registration;
+use CalDAV\User;
 
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
@@ -18,7 +18,7 @@ class Plugin extends ServerPlugin {
   private $users = null;
   private $logger = null;
 
-  public function __construct(Registrations\Backend\BackendInterface $registrations, Users\Backend\BackendInterface $users) {
+  public function __construct(Registration\Backend\BackendInterface $registrations, User\Backend\BackendInterface $users) {
     $this->registrations = $registrations;
     $this->users = $users;
     $this->logger = ConsoleLogger::for(Plugin::class);
