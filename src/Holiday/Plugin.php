@@ -82,7 +82,7 @@ class Plugin extends ServerPlugin {
       $calendarId = $this->calendarId;
 
       try {
-        $this->backend->createCalendarObject([$calendarId], $uri, $event);
+        $this->backend->createCalendarObject([$calendarId, null], $uri, $event);
       } catch (\PDOException $e) {
         $this->logger->info("Event {$uri} does already exist");
       }
