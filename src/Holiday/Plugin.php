@@ -4,20 +4,27 @@ namespace CalDAV\Holiday;
 
 use CalDAV\ConsoleLogger;
 
-use Sabre\VObject\Component\VCalendar;
+use Sabre\CalDAV;
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
+use Sabre\VObject\Component\VCalendar;
 
 class Plugin extends ServerPlugin {
 
-  private $auth = null;
+  private $backend = null;
   private $logger = null;
+  private $auth = null;
+  private $calendarId = 0;
 
-  // TODO use Sabre\CalDAV\Backend to access calendar storage
-  public function __construct() {
+  public function __construct(CalDAV\Backend\BackendInterface $backend) {
+    $this->backend = $backend;
     $this->logger = ConsoleLogger::for(Plugin::class);
+  }
+
+  public function setCalendarId(int $id): void {
+    $this->calendarId = $id;
   }
 
   public function initialize(Server $server) {
@@ -34,57 +41,67 @@ class Plugin extends ServerPlugin {
     $principal = $this->auth->getCurrentPrincipal();
     if ($principal == null) {
       $this->logger->warning('Attempt to refresh holidays unauthenticated');
-
       $response->setStatus(403);
       return false;
     }
 
     $method = $request->getMethod();
-    if ($method != 'POST') {
+    switch ($method) {
+    case 'POST':
+      $this->refreshEvents($request, $response);
+      break;
+
+    default:
       $response->setStatus(405);
       $response->setHeader('Allow', 'POST');
-      return false;
     }
 
-    // TODO check mime type to match text/plain
+    return false;
+  }
 
-    // TODO allow only current and next 5 years
-    $body = $request->getBodyAsString();
-    if (!preg_match('/^[0-9]*$/', $body)) {
-      $this->logger->error('Body does not contain a valid year');
-
+  private function refreshEvents(RequestInterface $request, ResponseInterface $response): bool {
+    $year = $this->parseYear($request);
+    if ($year == -1) {
       $response->setStatus(422);
       return false;
     }
 
-    $year = intval($body);
-    $success = $this->refreshEvents($year);
-
-    $response->setStatus($success ? 200 : 500);
-    return false;
-  }
-
-  private function refreshEvents(int $year): bool {
     $this->logger->info("Refreshing bavarian holidays for {$year}");
 
     $url = "https://feiertage-api.de/api/?jahr={$year}&nur_land=BY";
-    $response = $this->fetchResource($url);
+    $result = $this->fetchResource($url);
 
-    $json = json_decode($response, true);
+    $json = json_decode($result, true);
     if (!is_array($json)) {
+      $response->setStatus(500);
       return false;
     }
 
     foreach ($json as $title => $details) {
-      // TODO validate title and details
-      $date = $details['datum'];
-      $hint = $details['hinweis'];
+      list($uri, $event) = $this->createEvent($title, $details);
+      $calendarId = $this->calendarId;
 
-      $calendar = $this->createCalendar($title, $date, $hint);
-      // TODO update calendar backend
+      try {
+        $this->backend->createCalendarObject([$calendarId], $uri, $event);
+      } catch (\PDOException $e) {
+        $this->logger->info("Event {$uri} does already exist");
+      }
     }
 
+    $response->setStatus(200);
     return true;
+  }
+
+  private function parseYear(RequestInterface $request): int {
+    // TODO check mime type to match text/plain
+    // TODO allow only current and next 5 years
+    $body = $request->getBodyAsString();
+    if (!preg_match('/^[0-9]*$/', $body)) {
+      return -1;
+    }
+
+    $year = intval($body);
+    return $year;
   }
 
   private function fetchResource(string $url): string {
@@ -96,16 +113,24 @@ class Plugin extends ServerPlugin {
     return $output;
   }
 
-  private function createCalendar(string $title, string $date, string $hint): VCalendar {
+  private function createEvent(string $title, array $details): array {
     $calendar = new VCalendar();
 
+    // TODO validate title and details
+    $date = $details['datum'];
+    $hint = $details['hinweis'];
+
+    $uid = sha1("{$title}{$date}");
+    $uri = "{$uid}.ics";
+
     $calendar->add('VEVENT', [
+      'UID' => $uid,
       'SUMMARY' => $title,
       'DTSTART' => new \DateTime($date),
       'DESCRIPTION' => $hint
     ]);
 
-    return $calendar;
+    return [$uri, $calendar->serialize()];
   }
 }
 
