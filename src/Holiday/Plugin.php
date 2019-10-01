@@ -34,7 +34,7 @@ class Plugin extends ServerPlugin {
 
     $principal = $this->auth->getCurrentPrincipal();
     if ($principal == null) {
-      $this->logger->warn('Attempt to refresh holidays unauthenticated');
+      $this->logger->warning('Attempt to refresh holidays unauthenticated');
 
       $response->setStatus(403);
       return false;
