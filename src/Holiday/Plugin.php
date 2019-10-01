@@ -4,10 +4,9 @@ namespace CalDAV\Holiday;
 
 use CalDAV\ConsoleLogger;
 
-use Sabre\VObject;
+use Sabre\VObject\Component\VCalendar;
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
-use Sabre\DAV\Exception\Forbidden;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
 
@@ -59,19 +58,33 @@ class Plugin extends ServerPlugin {
     }
 
     $year = intval($body);
-    $this->refreshEvents($year);
+    $success = $this->refreshEvents($year);
 
-    $response->setStatus(200);
+    $response->setStatus($success ? 200 : 500);
     return false;
   }
 
-  private function refreshEvents(int $year): void {
+  private function refreshEvents(int $year): bool {
     $this->logger->info("Refreshing bavarian holidays for {$year}");
 
     $url = "https://feiertage-api.de/api/?jahr={$year}&nur_land=BY";
     $response = $this->fetchResource($url);
 
-    // TODO parse JSON and update calendar
+    $json = json_decode($response, true);
+    if (!is_array($json)) {
+      return false;
+    }
+
+    foreach ($json as $title => $details) {
+      // TODO validate title and details
+      $date = $details['datum'];
+      $hint = $details['hinweis'];
+
+      $calendar = $this->createCalendar($title, $date, $hint);
+      // TODO update calendar backend
+    }
+
+    return true;
   }
 
   private function fetchResource(string $url): string {
@@ -81,6 +94,18 @@ class Plugin extends ServerPlugin {
     $output = curl_exec($ch);
     curl_close($ch);
     return $output;
+  }
+
+  private function createCalendar(string $title, string $date, string $hint): VCalendar {
+    $calendar = new VCalendar();
+
+    $calendar->add('VEVENT', [
+      'SUMMARY' => $title,
+      'DTSTART' => new \DateTime($date),
+      'DESCRIPTION' => $hint
+    ]);
+
+    return $calendar;
   }
 }
 
