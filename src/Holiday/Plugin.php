@@ -16,15 +16,10 @@ class Plugin extends ServerPlugin {
   private $backend = null;
   private $logger = null;
   private $auth = null;
-  private $calendarId = 0;
 
   public function __construct(CalDAV\Backend\BackendInterface $backend) {
     $this->backend = $backend;
     $this->logger = ConsoleLogger::for(Plugin::class);
-  }
-
-  public function setCalendarId(int $id): void {
-    $this->calendarId = $id;
   }
 
   public function initialize(Server $server) {
@@ -36,13 +31,6 @@ class Plugin extends ServerPlugin {
     $path = $request->getPath();
     if ($path != 'holidays') {
       return true;
-    }
-
-    $principal = $this->auth->getCurrentPrincipal();
-    if ($principal == null) {
-      $this->logger->warning('Attempt to refresh holidays unauthenticated');
-      $response->setStatus(403);
-      return false;
     }
 
     $method = $request->getMethod();
@@ -60,31 +48,45 @@ class Plugin extends ServerPlugin {
   }
 
   private function refreshEvents(RequestInterface $request, ResponseInterface $response): bool {
-    $year = $this->parseYear($request);
-    if ($year == -1) {
+    $principal = $this->auth->getCurrentPrincipal();
+    if ($principal == null) {
+      $this->logger->warning('Attempt to refresh holidays unauthenticated');
+      $response->setStatus(401);
+      return false;
+    }
+
+    $calendar = $this->determineCalendar($principal);
+    if (!$calendar) {
+      $this->logger->warning("User {$principal} does not own a suitable calendar");
+      $response->setStatus(404);
+      return false;
+    }
+
+    $body = $request->getBodyAsString();
+    $filter = $this->parseFilter($body);
+    if (!$filter) {
       $response->setStatus(422);
       return false;
     }
 
-    $this->logger->info("Refreshing bavarian holidays for {$year}");
+    list($year, $state) = $filter;
+    $this->logger->info("Refreshing {$state} holidays for {$year}");
 
-    $url = "https://feiertage-api.de/api/?jahr={$year}&nur_land=BY";
-    $result = $this->fetchResource($url);
+    $url = "https://feiertage-api.de/api/?jahr={$year}&nur_land={$state}";
+    $json = $this->fetchResource($url);
 
-    $json = json_decode($result, true);
-    if (!is_array($json)) {
-      $response->setStatus(500);
+    if (!$json) {
+      $this->logger->warning('Failed to query holiday service');
+      $response->setStatus(503);
       return false;
     }
 
     foreach ($json as $title => $details) {
-      list($uri, $event) = $this->createEvent($title, $details);
-      $calendarId = $this->calendarId;
+      $event = $this->createEvent($title, $details);
 
-      try {
-        $this->backend->createCalendarObject([$calendarId, null], $uri, $event);
-      } catch (\PDOException $e) {
-        $this->logger->info("Event {$uri} does already exist");
+      if ($event) {
+        list($uri, $event) = $event;
+        $this->saveEvent($calendar, $uri, $event);
       }
     }
 
@@ -92,33 +94,58 @@ class Plugin extends ServerPlugin {
     return true;
   }
 
-  private function parseYear(RequestInterface $request): int {
-    // TODO check mime type to match text/plain
-    // TODO allow only current and next 5 years
-    $body = $request->getBodyAsString();
-    if (!preg_match('/^[0-9]*$/', $body)) {
-      return -1;
+  private function determineCalendar(string $principal) {
+    $calendars = $this->backend->getCalendarsForUser($principal);
+
+    foreach ($calendars as $calendar) {
+      $id = $calendar['id'];
+      $uri = $calendar['uri'];
+
+      if ($uri == 'holidays') {
+        return $id;
+      }
     }
 
-    $year = intval($body);
-    return $year;
+    return false;
   }
 
-  private function fetchResource(string $url): string {
+  private function parseFilter(string $body) {
+    parse_str($body, $filter);
+
+    $year = strval($filter['year'] ?? '');
+    if (!preg_match('/^[0-9]{4}$/', $year)) {
+      return false;
+    }
+
+    $state = strval($filter['state'] ?? '');
+    if (!preg_match('/^[A-Z]{2}$/', $state)) {
+      return false;
+    }
+
+    return [$year, $state];
+  }
+
+  private function fetchResource(string $url) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     $output = curl_exec($ch);
     curl_close($ch);
-    return $output;
+
+    $json = json_decode($output, true);
+    if (!is_array($json)) {
+      return false;
+    }
+
+    return $json;
   }
 
-  private function createEvent(string $title, array $details): array {
+  private function createEvent(string $title, array $details) {
     $calendar = new VCalendar();
 
     // TODO validate title and details
-    $date = $details['datum'];
-    $hint = $details['hinweis'];
+    $date = $details['datum'] ?? '';
+    $hint = $details['hinweis'] ?? '';
 
     $uid = sha1("{$title}{$date}");
     $uri = "{$uid}.ics";
@@ -131,6 +158,15 @@ class Plugin extends ServerPlugin {
     ]);
 
     return [$uri, $calendar->serialize()];
+  }
+
+  private function saveEvent(array $calendar, string $uri, string $event) {
+    $object = $this->backend->getCalendarObject($calendar, $uri);
+    if ($object == null) {
+      $this->backend->createCalendarObject($calendar, $uri, $event);
+    } else {
+      $this->backend->updateCalendarObject($calendar, $uri, $event);
+    }
   }
 }
 

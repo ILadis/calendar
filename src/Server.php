@@ -49,7 +49,6 @@ class Server {
     $server->addPlugin($logPlugin);
 
     $holidayPlugin = new \CalDAV\Holiday\Plugin($calendarBackend);
-    $holidayPlugin->setCalendarId(7);
     $server->addPlugin($holidayPlugin);
 
     $server->exec();
