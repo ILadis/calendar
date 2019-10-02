@@ -11,6 +11,8 @@ use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
 use Sabre\VObject\Component\VCalendar;
 
+use DateTimeImmutable as DateTime;
+
 class Plugin extends ServerPlugin {
 
   private $backend = null;
@@ -55,9 +57,9 @@ class Plugin extends ServerPlugin {
       return false;
     }
 
-    $calendar = $this->determineCalendar($principal);
+    $calendar = $this->findCalendar($principal);
     if (!$calendar) {
-      $this->logger->warning("User {$principal} does not own a suitable calendar");
+      $this->logger->warning("User {$principal} does not own a suitable holidays calendar");
       $response->setStatus(404);
       return false;
     }
@@ -76,7 +78,7 @@ class Plugin extends ServerPlugin {
     $json = $this->fetchResource($url);
 
     if (!$json) {
-      $this->logger->warning('Failed to query holiday service');
+      $this->logger->warning('Failed to query holidays service');
       $response->setStatus(503);
       return false;
     }
@@ -94,7 +96,7 @@ class Plugin extends ServerPlugin {
     return true;
   }
 
-  private function determineCalendar(string $principal) {
+  private function findCalendar(string $principal) {
     $calendars = $this->backend->getCalendarsForUser($principal);
 
     foreach ($calendars as $calendar) {
@@ -143,9 +145,14 @@ class Plugin extends ServerPlugin {
   private function createEvent(string $title, array $details) {
     $calendar = new VCalendar();
 
-    // TODO validate title and details
-    $date = $details['datum'] ?? '';
-    $hint = $details['hinweis'] ?? '';
+    $date = strval($details['datum'] ?? '');
+    $hint = strval($details['hinweis'] ?? '');
+
+    $start = DateTime::createFromFormat('!Y-m-d', $date);
+    if (!$start) {
+      return false;
+    }
+    $end = $start->modify('+1 day');
 
     $uid = sha1("{$title}{$date}");
     $uri = "{$uid}.ics";
@@ -153,7 +160,8 @@ class Plugin extends ServerPlugin {
     $calendar->add('VEVENT', [
       'UID' => $uid,
       'SUMMARY' => $title,
-      'DTSTART' => new \DateTime($date),
+      'DTSTART' => $start,
+      'DTEND' => $end,
       'DESCRIPTION' => $hint
     ]);
 
