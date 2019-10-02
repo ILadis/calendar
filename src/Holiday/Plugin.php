@@ -11,8 +11,6 @@ use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
 use Sabre\VObject\Component\VCalendar;
 
-use DateTimeImmutable as DateTime;
-
 class Plugin extends ServerPlugin {
 
   private $backend = null;
@@ -148,22 +146,24 @@ class Plugin extends ServerPlugin {
     $date = strval($details['datum'] ?? '');
     $hint = strval($details['hinweis'] ?? '');
 
-    $start = DateTime::createFromFormat('!Y-m-d', $date);
-    if (!$start) {
+    $date = \DateTime::createFromFormat('!Y-m-d', $date);
+    if (!$date) {
       return false;
     }
-    $end = $start->modify('+1 day');
+
+    $date = $date->format('Ymd');
 
     $uid = sha1("{$title}{$date}");
     $uri = "{$uid}.ics";
 
-    $calendar->add('VEVENT', [
+    $event = $calendar->add('VEVENT', [
       'UID' => $uid,
       'SUMMARY' => $title,
-      'DTSTART' => $start,
-      'DTEND' => $end,
       'DESCRIPTION' => $hint
     ]);
+
+    $start = $event->add('DTSTART', $date);
+    $start->add('VALUE', 'DATE');
 
     return [$uri, $calendar->serialize()];
   }
