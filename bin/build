@@ -19,8 +19,8 @@ $phar->buildFromIterator($iteratorOf('/src'), $rootdir);
 
 $phar->addFromString('index.php', <<<EOF
 <?php
-function exception_error_handler($errno, $errstr, $errfile, $errline) {
-  throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+function exception_error_handler(\$errno, \$errstr, \$errfile, \$errline) {
+  throw new ErrorException(\$errstr, 0, \$errno, \$errfile, \$errline);
 }
 set_error_handler('exception_error_handler');
 require_once __DIR__ . '/vendor/autoload.php';
