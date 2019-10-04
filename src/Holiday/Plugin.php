@@ -9,6 +9,7 @@ use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
+use Sabre\VObject;
 use Sabre\VObject\Component\VCalendar;
 
 class Plugin extends ServerPlugin {
@@ -69,7 +70,7 @@ class Plugin extends ServerPlugin {
       return false;
     }
 
-    list($year, $state) = $filter;
+    [$year, $state] = $filter;
     $this->logger->info("Refreshing {$state} holidays for {$year}");
 
     $url = "https://feiertage-api.de/api/?jahr={$year}&nur_land={$state}";
@@ -85,8 +86,7 @@ class Plugin extends ServerPlugin {
       $event = $this->createEvent($title, $details);
 
       if ($event) {
-        list($uri, $event) = $event;
-        $this->saveEvent($calendar, $uri, $event);
+        $this->saveEvent($calendar, $event);
       }
     }
 
@@ -94,7 +94,7 @@ class Plugin extends ServerPlugin {
     return true;
   }
 
-  private function findCalendar(string $principal) {
+  private function findCalendar(string $principal): ?array {
     $calendars = $this->backend->getCalendarsForUser($principal);
 
     foreach ($calendars as $calendar) {
@@ -106,26 +106,26 @@ class Plugin extends ServerPlugin {
       }
     }
 
-    return false;
+    return null;
   }
 
-  private function parseFilter(string $body) {
+  private function parseFilter(string $body): ?array {
     parse_str($body, $filter);
 
     $year = strval($filter['year'] ?? '');
     if (!preg_match('/^[0-9]{4}$/', $year)) {
-      return false;
+      return null;
     }
 
     $state = strval($filter['state'] ?? '');
     if (!preg_match('/^[A-Z]{2}$/', $state)) {
-      return false;
+      return null;
     }
 
     return [$year, $state];
   }
 
-  private function fetchResource(string $url) {
+  private function fetchResource(string $url): ?array {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -134,13 +134,13 @@ class Plugin extends ServerPlugin {
 
     $json = json_decode($output, true);
     if (!is_array($json)) {
-      return false;
+      return null;
     }
 
     return $json;
   }
 
-  private function createEvent(string $title, array $details) {
+  private function createEvent(string $title, array $details): ?VCalendar {
     $calendar = new VCalendar();
 
     $date = strval($details['datum'] ?? '');
@@ -148,13 +148,11 @@ class Plugin extends ServerPlugin {
 
     $date = \DateTime::createFromFormat('!Y-m-d', $date);
     if (!$date) {
-      return false;
+      return null;
     }
 
     $date = $date->format('Ymd');
-
     $uid = sha1("{$title}{$date}");
-    $uri = "{$uid}.ics";
 
     $event = $calendar->add('VEVENT', [
       'UID' => $uid,
@@ -165,16 +163,46 @@ class Plugin extends ServerPlugin {
     $start = $event->add('DTSTART', $date);
     $start->add('VALUE', 'DATE');
 
-    return [$uri, $calendar->serialize()];
+    return $calendar;
   }
 
-  private function saveEvent(array $calendar, string $uri, string $event) {
+  private function saveEvent(array $calendar, VCalendar $event): void {
+    $uid = strval($event->VEVENT->UID);
+    $uri = "{$uid}.ics";
+
+    $data = $event->serialize();
     $object = $this->backend->getCalendarObject($calendar, $uri);
+
     if ($object == null) {
-      $this->backend->createCalendarObject($calendar, $uri, $event);
-    } else {
-      $this->backend->updateCalendarObject($calendar, $uri, $event);
+      $this->logger->info("Creating event '{$uid}'");
+      $this->backend->createCalendarObject($calendar, $uri, $data);
     }
+    else if ($this->shouldUpdate($object, $event)) {
+      $this->logger->info("Updating event '{$uid}'");
+      $this->backend->updateCalendarObject($calendar, $uri, $data);
+    }
+  }
+
+  private function shouldUpdate(array $object, VCalendar $event, array $ignore = ['DTSTAMP']): bool {
+    $data = strval($object['calendardata'] ?? '');
+    $other = VObject\Reader::read($data);
+
+    foreach ($event->VEVENT->children() as $child) {
+      $key = strval($child->name);
+
+      if (in_array($key, $ignore)) {
+        continue;
+      }
+
+      $value1 = strval($event->VEVENT->$key);
+      $value2 = strval($other->VEVENT->$key);
+
+      if ($value1 != $value2) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 
