@@ -78,8 +78,8 @@ setup() {
 
   # assert
   [ "$statusCode" -eq 200 ]
-  [ "$eventCount" -eq 29 ]
-  [ "$changeCount" -eq 29 ]
+  [ "$eventCount" -eq 15 ]
+  [ "$changeCount" -eq 15 ]
 }
 
 teardown() {

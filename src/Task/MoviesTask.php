@@ -21,11 +21,14 @@ class MoviesTask implements Task {
       return null;
     }
 
+    $location = urlencode('{"lon":11.07,"lat":49.45}');
+    $headers = ["Cookie: selectedLocation={$location}"];
+
     $url = 'https://deinkinoticket.de/api/v1/films'
       . "?\$orderby=filmstart&\$filter=filmstart+gt+{$from}+and+filmstart+lt+{$to}"
       . '+and+is_alternative_content+eq+false+and+is_arthouse+eq+false';
 
-    $json = $this->fetchResource($url);
+    $json = $this->fetchResource($url, $headers);
     if (!$json) {
       return null;
     }
@@ -57,10 +60,11 @@ class MoviesTask implements Task {
     return true;
   }
 
-  private function fetchResource(string $url): ?array {
+  private function fetchResource(string $url, array $headers): ?array {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $output = curl_exec($ch);
     curl_close($ch);
 
