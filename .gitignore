@@ -1,2 +1,6 @@
 vendor/
+pkg/
+calendar.phar
+caldav-*.tar.xz
 composer.lock
+db.sqlite

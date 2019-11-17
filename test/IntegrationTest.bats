@@ -57,7 +57,7 @@ setup() {
   # assert
   [ "$statusCode" -eq 200 ]
   [ "$eventCount" -eq 15 ]
-  [ "$changeCount" -eq 15 ]
+  [ "$eventCount" -eq "$changeCount" ]
 }
 
 @test 'execution of movies task' {
@@ -78,8 +78,8 @@ setup() {
 
   # assert
   [ "$statusCode" -eq 200 ]
-  [ "$eventCount" -eq 15 ]
-  [ "$changeCount" -eq 15 ]
+  [ "$eventCount" -ne 0 ]
+  [ "$eventCount" -eq "$changeCount" ]
 }
 
 teardown() {
