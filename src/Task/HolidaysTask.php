@@ -74,7 +74,11 @@ class HolidaysTask implements Task {
     return $json;
   }
 
-  private function createEvent(string $title, array $details): ?VCalendar {
+  private function createEvent($title, $details): ?VCalendar {
+    if (!is_string($title) || !is_array($details)) {
+      return null;
+    }
+
     $calendar = new VCalendar();
 
     $date = strval($details['datum'] ?? '');
