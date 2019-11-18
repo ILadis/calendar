@@ -3,9 +3,17 @@
 namespace CalDAV\Task;
 
 use DateTime;
+
+use Sabre\HTTP;
 use Sabre\VObject\Component\VCalendar;
 
 class HolidaysTask implements Task {
+
+  private $client;
+
+  public function __construct($client = null) {
+    $this->client = $client ?? new HTTP\Client();
+  }
 
   public function run(array $params): ?array {
     $valid = $this->verifyParams($params, $year, $state);
@@ -13,10 +21,7 @@ class HolidaysTask implements Task {
       return null;
     }
 
-    $url = 'https://feiertage-api.de/api/'
-      . "?jahr={$year}&nur_land={$state}";
-
-    $json = $this->fetchResource($url);
+    $json = $this->fetchResource($year, $state);
     if (!$json) {
       return null;
     }
@@ -47,14 +52,21 @@ class HolidaysTask implements Task {
     return true;
   }
 
-  private function fetchResource(string $url): ?array {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $output = curl_exec($ch);
-    curl_close($ch);
+  private function fetchResource(string $year, string $state): ?array {
+    $url = 'https://feiertage-api.de/api/'
+      . "?jahr={$year}&nur_land={$state}";
 
-    $json = json_decode($output, true);
+    $request = new HTTP\Request('GET', $url);
+    $response = $this->client->send($request);
+
+    $status = $response->getStatus();
+    if ($status != 200) {
+      return null;
+    }
+
+    $body = $response->getBodyAsString();
+    $json = json_decode($body, true);
+
     if (!is_array($json)) {
       return null;
     }
