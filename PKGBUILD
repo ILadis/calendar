@@ -7,6 +7,12 @@ depends=('php' 'php-sqlite')
 makedepends=('composer')
 checkdepends=('bash-bats')
 
+source=('phpunit.phar::https://phar.phpunit.de/phpunit-8.phar')
+noextract=('phpunit.phar')
+
+sha256sums=(
+  'b12f0348e81d05007720c5cee4df6a1328f6205a3429548c50e5a6e444846678')
+
 license=('custom')
 url='https://github.com/ILadis/calendar'
 
@@ -18,6 +24,7 @@ build() {
 
 check() {
   cd ..
+  phpunit --bootstrap vendor/autoload.php --testdox test/
   bats test/
 }
 
