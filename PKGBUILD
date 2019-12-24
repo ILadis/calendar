@@ -24,7 +24,7 @@ build() {
 
 check() {
   cd ..
-  phpunit --bootstrap vendor/autoload.php --testdox test/
+  php ./phpunit.phar --bootstrap vendor/autoload.php --testdox test/
   bats test/
 }
 
