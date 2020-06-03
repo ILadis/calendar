@@ -60,28 +60,6 @@ setup() {
   [ "$eventCount" -eq "$changeCount" ]
 }
 
-@test 'execution of movies task' {
-  # arrange
-  sqlite3 db.sqlite \
-    'INSERT INTO users (id, username, password) VALUES (1, "user1", "$2y$10$59w3VWsmP0nKFDIU33RTU.PWuwlgp8WiL0O.yBtzracBKn4J7QQYy");' \
-    'INSERT INTO calendars (id, components) VALUES (1, "VEVENT,VTODO");' \
-    'INSERT INTO calendarinstances (id, calendarid, principaluri, uri) VALUES (1, 1, "principals/user1", "movies");'
-
-  # act
-  statusCode=$(curl -u 'user1:dummypwd' -w '%{http_code}' \
-    --data-binary '{"month": "2019-11"}' \
-    -so /dev/null 'http://localhost:8080/calendar/tasks/movies')
-  eventCount=$(sqlite3 db.sqlite \
-    'SELECT count(*) FROM calendarobjects;')
-  changeCount=$(sqlite3 db.sqlite \
-    'SELECT count(*) FROM calendarchanges;')
-
-  # assert
-  [ "$statusCode" -eq 200 ]
-  [ "$eventCount" -ne 0 ]
-  [ "$eventCount" -eq "$changeCount" ]
-}
-
 teardown() {
   kill $(jobs -p)
   rm -f db.sqlite
