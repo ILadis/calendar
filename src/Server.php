@@ -34,7 +34,7 @@ class Server {
     $syncPlugin = new \Sabre\DAV\Sync\Plugin();
     $server->addPlugin($syncPlugin);
 
-    $browserPlugin = new \Sabre\DAV\Browser\Plugin();
+    $browserPlugin = new \CalDAV\Browser\Plugin();
     $server->addPlugin($browserPlugin);
 
     $setupBackend = new \CalDAV\Setup\Backend\PDO($pdo);
