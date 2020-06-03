@@ -6,16 +6,11 @@ if (!Phar::canWrite()) {
   exit(1);
 }
 
-$filter = function($file, $key, $iterator) {
-  return true;
-};
-
 $rootdir = realpath(__DIR__ . '/..');
-$iteratorOf = function(string $folder) use ($rootdir, $filter): Iterator {
+$iteratorOf = function($folder) use ($rootdir) {
   $skipDots = RecursiveDirectoryIterator::SKIP_DOTS;
-  $directoryIterator = new RecursiveDirectoryIterator($rootdir . $folder, $skipDots);
-  $filterIterator = new RecursiveCallbackFilterIterator($directoryIterator, $filter);
-  return new RecursiveIteratorIterator($filterIterator);
+  $dirIterator = new RecursiveDirectoryIterator($rootdir . $folder, $skipDots);
+  return new RecursiveIteratorIterator($dirIterator);
 };
 
 $phar = new Phar("{$rootdir}/calendar.phar");
