@@ -18,6 +18,7 @@ class Plugin extends ServerPlugin {
 
   public function initialize(Server $server) {
     $server->on('method:*', [$this, 'logRequest']);
+    $server->on('exception', [$this, 'logException']);
   }
 
   public function logRequest(RequestInterface $request): void {
@@ -26,6 +27,10 @@ class Plugin extends ServerPlugin {
     $method = $request->getMethod();
 
     $this->logger->info("{$method} {$base}{$path}");
+  }
+
+  public function logException(\Throwable $exception) {
+    $this->logger->error('Exception occoured', array('exception' => $exception));
   }
 }
 
