@@ -21,6 +21,7 @@ class PDO extends AbstractBasic implements BackendInterface {
     $result = parent::check($request, $response);
 
     if ($result[0]) {
+      // on successful authentication chante to lower case principal name
       $result[1] = strtolower($result[1]);
     }
 
@@ -41,8 +42,11 @@ class PDO extends AbstractBasic implements BackendInterface {
     $stmt->execute([$username]);
 
     $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-    $hash = strval($result['password']);
+    if (!$result) {
+      return false;
+    }
 
+    $hash = strval($result['password']);
     $valid = password_verify($password, $hash);
 
     return $valid;
