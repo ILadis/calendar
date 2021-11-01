@@ -15,14 +15,14 @@ CREATE TABLE users (
 CREATE TABLE calendars (
   id integer primary key asc NOT NULL,
   synctoken integer DEFAULT 1 NOT NULL,
-  components text NOT NULL
+  components text COMMENT 'VJOURNAL, VTODO, VEVENT' NOT NULL
 );
 
 CREATE TABLE calendarinstances (
   id integer primary key asc NOT NULL,
   calendarid integer NOT NULL,
   principaluri text NOT NULL,
-  access integer NOT NULL DEFAULT '1',
+  access integer COMMENT '1 = owner, 2 = read, 3 = readwrite' NOT NULL DEFAULT '1',
   displayname text,
   uri text NOT NULL,
   description text,
@@ -60,7 +60,7 @@ CREATE TABLE calendarchanges (
   uri text,
   synctoken integer NOT NULL,
   calendarid integer NOT NULL,
-  operation integer NOT NULL
+  operation integer COMMENT '1 = add, 2 = modify, 3 = delete' NOT NULL
 );
 
 CREATE INDEX calendarid_synctoken ON calendarchanges (calendarid, synctoken);
