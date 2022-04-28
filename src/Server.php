@@ -51,6 +51,10 @@ class Server {
     $taskPlugin = new \CalDAV\Task\Plugin($calendarBackend);
     $server->addPlugin($taskPlugin);
 
+    $adminBackend = new \CalDAV\Admin\Backend\PDO($pdo);
+    $adminPlugin = new \CalDAV\Admin\Plugin($adminBackend);
+    $server->addPlugin($adminPlugin);
+
     $server->exec();
   }
 }
