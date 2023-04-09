@@ -7,11 +7,11 @@ depends=('php' 'php-sqlite')
 makedepends=('composer')
 checkdepends=('bash-bats')
 
-source=('phpunit.phar::https://phar.phpunit.de/phpunit-8.5.5.phar')
+source=('phpunit.phar::https://phar.phpunit.de/phpunit-10.0.19.phar')
 noextract=('phpunit.phar')
 
 sha256sums=(
-  'ae90e527a02b9acc913c0b52707aab5f33dc885e2a74f2f6ee6a771427e83942')
+  '18bee0d28a393916348c2ad18af546dbb416fb2775a8fde0c82b7e45dd62f9ab')
 
 license=('custom')
 url='https://github.com/ILadis/calendar'
