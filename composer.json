@@ -5,6 +5,7 @@
     "psr-4": { "CalDAV\\": "src/" }
   },
   "require": {
-    "sabre/dav": "4.1.5"
+    "psr/log": "1.1.4",
+    "sabre/dav": "4.4.0"
   }
 }
