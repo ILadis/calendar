@@ -5,7 +5,7 @@ pkgdesc='A ready to deploy CalDAV server based on SabreDAV'
 arch=('any')
 depends=('php' 'php-sqlite')
 makedepends=('composer')
-checkdepends=('bash-bats')
+checkdepends=('bats')
 
 source=('phpunit.phar::https://phar.phpunit.de/phpunit-10.0.19.phar')
 noextract=('phpunit.phar')
