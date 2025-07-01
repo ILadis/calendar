@@ -6,6 +6,6 @@
   },
   "require": {
     "psr/log": "1.1.4",
-    "sabre/dav": "4.4.0"
+    "sabre/dav": "4.7.0"
   }
 }
