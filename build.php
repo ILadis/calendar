@@ -36,14 +36,14 @@ function build($clean = false) {
   $phar->buildFromIterator($vendor, $root);
   $phar->buildFromIterator($source, $root);
   $phar->addFromString('index.php', ''
-    .'<?php'
-    .'function exception_error_handler($errno, $errstr, $errfile, $errline) {'
-    .'  throw new ErrorException($errstr, 0, $errno, $errfile, $errline);'
-    .'}'
-    .'set_error_handler("exception_error_handler");'
-    .'require_once __DIR__ . "/vendor/autoload.php";'
-    .'CalDAV\Server::run();'
-    .'?>');
+    . "<?php\n"
+    . "function exception_error_handler(\$errno, \$errstr, \$errfile, \$errline) {\n"
+    . "  throw new ErrorException(\$errstr, 0, \$errno, \$errfile, \$errline);\n"
+    . "}\n"
+    . "set_error_handler('exception_error_handler');\n"
+    . "require_once __DIR__ . '/vendor/autoload.php';\n"
+    . "CalDAV\Server::run();\n"
+    . "?>");
 }
 
 function test() {
