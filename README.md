@@ -1,28 +1,22 @@
-A ready to deploy CalDAV server based on SabreDAV. 
+A ready to deploy CalDAV server based on SabreDAV.
 
 ## Building
 
-The PHP dependency manager Composer is required to build the plugin. For installation instructions follow their [getting started](https://getcomposer.org/) guide.
+The [PHP dependency manager Composer](https://getcomposer.org/) is required to build the CalDAV server. The `./build.php` script will automatically download Composer if no `composer.phar` file is found.
 
-Then install all required runtime dependencies:
-
-```sh
-$ composer install
-```
-
-Composer will output an error message if any PHP extensions need to be enabled in order to run SabreDAV. Rerun the above command if necessary.
-
-Then build the deployable PHP archive:
+The CalDAV server can be built with:
 
 ```sh
-$ ./bin/build
+$ ./build.php build --clean
 ```
 
-This should create a file named `calendar.phar` in the current directory.
+This will download all required runtime dependencies into the `vendor/` directory. Composer will output an error message if any PHP extensions need to be enabled in order to run the CalDAV server. When all required PHP extensions are enabled rerun the `./build.php` script.
+
+If the `./build.php` script finishes successful a file named `calendar.phar` should be created.
 
 ## Running
 
-After building the `calendar.phar` archive, the CalDAV server can be started using PHP's built-in web server:
+After building `calendar.phar`, the CalDAV server can be started using PHP's built-in web server:
 
 ```sh
 $ php -S localhost:8080 ./calendar.phar

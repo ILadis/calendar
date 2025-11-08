@@ -4,8 +4,8 @@ namespace CalDAV;
 
 class Server {
 
-  public static function run() {
-    $pdo = new \PDO('sqlite:db.sqlite');
+  public static function run($baseUri = '/calendar', $dataSource = 'db.sqlite', $sapi = null) {
+    $pdo = new \PDO("sqlite:{$dataSource}");
     $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
     $principalBackend = new \Sabre\DAVACL\PrincipalBackend\PDO($pdo);
@@ -14,7 +14,7 @@ class Server {
     $server = new \Sabre\DAV\Server([
       new \Sabre\CalDAV\Principal\Collection($principalBackend),
       new \Sabre\CalDAV\CalendarRoot($principalBackend, $calendarBackend),
-    ]);
+    ], $sapi);
     $server->setBaseUri('/calendar');
 
     $authBackend = new \CalDAV\User\Backend\PDO($pdo);
@@ -55,7 +55,7 @@ class Server {
     $adminPlugin = new \CalDAV\Admin\Plugin($adminBackend);
     $server->addPlugin($adminPlugin);
 
-    $server->exec();
+    $server->start();
   }
 }
 

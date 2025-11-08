@@ -15,7 +15,7 @@ class HolidaysTaskTest extends TestCase {
     $this->sut = new HolidaysTask($this->client);
   }
 
-  public function testShouldReturnNullIfParamsAreInvalid(): void {
+  public function testShouldReturnNullIfParamsAreInvalid() {
     // arrange
     $params = array([
       'year' => 'Ox19F',
@@ -34,7 +34,7 @@ class HolidaysTaskTest extends TestCase {
     }
   }
 
-  public function testShouldReturnNullIfResponseCodeIsNot200OK() {
+  public function testShouldReturnNullIfResponseCodeIsNot200Ok() {
     // arrange
     $response = new HTTP\Response();
 
@@ -42,8 +42,7 @@ class HolidaysTaskTest extends TestCase {
     foreach ($codes as $code) {
       $response->setStatus($code);
 
-      $this->client->method('send')
-        ->willReturn($response);
+      $this->client->method('send')->willReturn($response);
 
       // act
       $events = $this->sut->run(['year' => '2016', 'state' => 'BY']);
@@ -68,8 +67,7 @@ class HolidaysTaskTest extends TestCase {
       . '    "datum":"2016-10-03" }'
       . '}');
 
-    $this->client->method('send')
-      ->willReturn($response);
+    $this->client->method('send')->willReturn($response);
 
     // act
     $events = $this->sut->run(['year' => '2016', 'state' => 'BY']);
@@ -98,8 +96,7 @@ class HolidaysTaskTest extends TestCase {
     foreach ($bodies as $body) {
       $response->setBody($body);
 
-      $this->client->method('send')
-        ->willReturn($response);
+      $this->client->method('send')->willReturn($response);
 
       // act
       $events = $this->sut->run(['year' => '2016', 'state' => 'BY']);
