@@ -8,7 +8,7 @@ use CalDAV\Task\Backend;
 use Sabre\HTTP;
 use Sabre\VObject\Component\VCalendar;
 
-class HolidaysTask implements Task {
+class HolidaysTask extends Task {
 
   private $backend = null;
   private $client = null;
@@ -19,8 +19,8 @@ class HolidaysTask implements Task {
   }
 
   public function run(string $principal, array $params): bool {
-    $valid = $this->verifyParams($params, $year, $state);
-    if (!$valid) {
+    if (parent::param($params, 'year',  '/[0-9]{4}/', $year)  != 1 ||
+        parent::param($params, 'state', '/[A-Z]{2}/', $state) != 1) {
       return false;
     }
 
@@ -29,7 +29,7 @@ class HolidaysTask implements Task {
       return false;
     }
 
-    $json = $this->fetchResource($year, $state);
+    $json = $this->fetchResource(current($year), current($state));
     if (!$json) {
       return false;
     }
@@ -45,20 +45,6 @@ class HolidaysTask implements Task {
 
     foreach ($events as $event) {
       $this->backend->saveEvent($calendarId, $event);
-    }
-
-    return true;
-  }
-
-  private function verifyParams(array $params, &$year, &$state): bool {
-    $year = strval($params['year'] ?? '');
-    if (!preg_match('/^[0-9]{4}$/', $year)) {
-      return false;
-    }
-
-    $state = strval($params['state'] ?? '');
-    if (!preg_match('/^[A-Z]{2}$/', $state)) {
-      return false;
     }
 
     return true;

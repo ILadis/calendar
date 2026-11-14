@@ -4,7 +4,7 @@ namespace CalDAV\Task;
 
 use CalDAV\Task\Backend;
 
-class TodosTask implements Task {
+class TodosTask extends Task {
 
   private $backend = null;
 
@@ -13,31 +13,13 @@ class TodosTask implements Task {
   }
 
   public function run(string $principal, array $params): bool {
-    $valid = $this->verifyParams($params, $principals, $title, $uri);
-    if (!$valid) {
+    if (parent::param($params, 'principals', '/principals\/[a-z0-9]+/', $principals) <= 0 ||
+        parent::param($params, 'title', '/.+/',      $title) != 1 ||
+        parent::param($params, 'uri',   '/[a-z-]+/', $uri)   != 1) {
       return false;
     }
 
-    return $this->backend->newSharedTodoList($principals, $title, $uri);
-  }
-
-  private function verifyParams(array $params, &$principals, &$title, &$uri): bool {
-    $principals = $params['principals'];
-    if (!is_array($principals) || empty($principals)) {
-      return false;
-    }
-
-    $title = $params['title'];
-    if (!is_string($title) || empty($title)) {
-      return false;
-    }
-
-    $uri = $params['uri'];
-    if (!is_string($title) || empty($title) || !preg_match('|^[a-z-]+$|', $uri)) {
-      return false;
-    }
-
-    return true;
+    return $this->backend->newSharedTodoList($principals, current($title), current($uri));
   }
 }
 
