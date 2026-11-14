@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\Calendar\Backend;
+namespace CalDAV\Task\Backend;
 
 use CalDAV\ConsoleLogger;
 
@@ -113,6 +113,35 @@ class PDO implements BackendInterface {
     }
 
     return $principal['id'];
+  }
+
+  public function deletePrincipal(string $principal): bool {
+    $principalId = $this->findPrincipalId($principal);
+    if ($principalId <= 0) {
+      return false;
+    }
+
+    $this->pdo->prepare('DELETE FROM groupmembers WHERE principal_id = ?')->execute([$principalId]);
+    $this->pdo->prepare('DELETE FROM schedulingobjects WHERE principaluri = ?')->execute([$principal]);
+    $this->pdo->prepare('DELETE FROM calendarsubscriptions WHERE principaluri = ?')->execute([$principal]);
+    $this->pdo->prepare('DELETE FROM calendarinstances WHERE principaluri = ?')->execute([$principal]);
+    $this->pdo->prepare('DELETE FROM principals WHERE uri = ?')->execute([$principal]);
+    // TODO also remove from users by username
+
+    $stmt = $this->pdo->query(''
+        .'SELECT c.id FROM calendars c '
+        .'LEFT JOIN calendarinstances ci ON ci.calendarid = c.id '
+        .'WHERE ci.id IS NULL');
+
+    $orphanedCalendarIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+    foreach ($orphanedCalendarIds as $calendarId) {
+      $this->pdo->prepare('DELETE FROM calendarchanges WHERE calendarid = ?')->execute([$calendarId]);
+      $this->pdo->prepare('DELETE FROM calendarobjects WHERE calendarid = ?')->execute([$calendarId]);
+      $this->pdo->prepare('DELETE FROM calendars WHERE id = ?')->execute([$calendarId]);
+    }
+
+    return true;
   }
 }
 

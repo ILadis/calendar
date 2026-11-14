@@ -2,13 +2,13 @@
 
 namespace CalDAV\Task;
 
-use CalDAV\Calendar;
+use CalDAV\Task\Backend;
 
 class TodosTask implements Task {
 
   private $backend = null;
 
-  public function __construct(Calendar\Backend\BackendInterface $backend) {
+  public function __construct(Backend\BackendInterface $backend) {
     $this->backend = $backend;
   }
 

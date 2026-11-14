@@ -2,7 +2,7 @@
 
 namespace CalDAV\Task;
 
-use CalDAV\Calendar;
+use CalDAV\Task\Backend;
 use CalDAV\ConsoleLogger;
 
 use Sabre\DAV\Server;
@@ -16,7 +16,7 @@ class Plugin extends ServerPlugin {
   private $logger = null;
   private $auth = null;
 
-  public function __construct(Calendar\Backend\BackendInterface $backend) {
+  public function __construct(Backend\BackendInterface $backend) {
     $this->backend = $backend;
     $this->logger = ConsoleLogger::for(Plugin::class);
   }

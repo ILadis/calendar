@@ -1,6 +1,6 @@
 <?php
 
-namespace CalDAV\Calendar\Backend;
+namespace CalDAV\Task\Backend;
 
 use Sabre\VObject\Component\VCalendar;
 

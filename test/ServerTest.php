@@ -65,7 +65,7 @@ class ServerTest extends TestCase {
     $db = new \SQLite3('temp.sqlite');
     $db->exec("INSERT INTO users (id, username, password) VALUES (1, 'user1', '{$password}')");
     $db->exec("INSERT INTO principals (id, uri, displayname) VALUES (1, 'principals/user1', 'user1')");
-    $db->exec("INSERT INTO calendars (id, components) VALUES (1, 'VEVENT,VTODO')");
+    $db->exec("INSERT INTO calendars (id, components) VALUES (1, 'VEVENT')");
     $db->exec("INSERT INTO calendarinstances (id, calendarid, principaluri, uri) VALUES (1, 1, 'principals/user1', 'holidays')");
 
     $http = self::newExchange();
@@ -89,23 +89,52 @@ class ServerTest extends TestCase {
     $password = password_hash('dummypwd', PASSWORD_BCRYPT);
 
     $db = new \SQLite3('temp.sqlite');
-    $db->exec("INSERT INTO users (id, username, password) VALUES (1, 'user1', '{$password}')");
-    $db->exec("INSERT INTO principals (id, uri, displayname) VALUES (1, 'principals/user1', 'user1')");
-    $db->exec("INSERT INTO users (id, username, password) VALUES (2, 'newuser', '{$password}')");
-    $db->exec("INSERT INTO principals (id, uri, displayname) VALUES (2, 'principals/newuser', 'newuser')");
+    $db->exec("INSERT INTO users (id, username, password) VALUES (1, 'user1', '{$password}'), (2, 'user2', '{$password}')");
+    $db->exec("INSERT INTO principals (id, uri, displayname) VALUES (1, 'principals/user1', 'user1'), (2, 'principals/user2', 'user2')");
 
     $http = self::newExchange();
     $http->getRequest()->setMethod('POST');
     $http->getRequest()->setUrl('/calendar/tasks/todos');
     $http->getRequest()->setHeader('Authorization', "Basic {$authz}");
-    $http->getRequest()->setBody('{"principals": ["principals/user1", "principals/newuser"], "title": "Yet another TODO list", "uri": "yatodol"}');
+    $http->getRequest()->setBody('{"principals": ["principals/user1", "principals/user2"], "title": "Yet another TODO list", "uri": "yatodol"}');
 
     // act
     Server::run('/calendar', 'temp.sqlite', $http);
 
     // assert
     $this->assertEquals(200, $http->getResponse()->getStatus());
+    $this->assertEquals(1, $db->querySingle("SELECT count(*) FROM calendars"));
     $this->assertEquals(2, $db->querySingle("SELECT count(*) FROM calendarinstances WHERE access=3 AND displayname='Yet another TODO list'"));
+  }
+
+  public function testShouldUnregisterUserAndCleanupCalendars() {
+    // arrange
+    $authz = base64_encode('user1:dummypwd');
+    $password = password_hash('dummypwd', PASSWORD_BCRYPT);
+
+    $db = new \SQLite3('temp.sqlite');
+    $db->exec("INSERT INTO users (id, username, password) VALUES (1, 'user1', '{$password}'), (2, 'user2', '{$password}')");
+    $db->exec("INSERT INTO principals (id, uri, displayname) VALUES (1, 'principals/user1', 'user1'), (2, 'principals/user2', 'user2')");
+    $db->exec("INSERT INTO calendars (id, components) VALUES (1, 'VEVENT'), (2, 'VEVENT'), (3, 'VTODO')");
+    $db->exec("INSERT INTO calendarinstances (id, calendarid, access, principaluri, uri) VALUES (1, 1, 1, 'principals/user1', 'personal')");
+    $db->exec("INSERT INTO calendarinstances (id, calendarid, access, principaluri, uri) VALUES (2, 2, 2, 'principals/user1', 'holidays')");
+    $db->exec("INSERT INTO calendarinstances (id, calendarid, access, principaluri, uri) VALUES (3, 3, 3, 'principals/user1', 'todos')");
+    $db->exec("INSERT INTO calendarinstances (id, calendarid, access, principaluri, uri) VALUES (4, 3, 3, 'principals/user2', 'todos')");
+
+    $http = self::newExchange();
+    $http->getRequest()->setMethod('POST');
+    $http->getRequest()->setUrl('/calendar/tasks/unregister');
+    $http->getRequest()->setHeader('Authorization', "Basic {$authz}");
+    $http->getRequest()->setBody('{"principals": ["principals/user1"]}');
+
+    // act
+    Server::run('/calendar', 'temp.sqlite', $http);
+
+    // assert
+    $this->assertEquals(200, $http->getResponse()->getStatus());
+    $this->assertEquals([2], $this->fetchAll($db, "SELECT id FROM principals"));
+    $this->assertEquals([3], $this->fetchAll($db, "SELECT id FROM calendars"));
+    $this->assertEquals([4], $this->fetchAll($db, "SELECT id FROM calendarinstances"));
   }
 
   public function testShouldCreateNewCalendarEvent() {
@@ -143,6 +172,17 @@ class ServerTest extends TestCase {
 
     // assert
     $this->assertEquals(201, $http->getResponse()->getStatus());
+  }
+
+  private static function fetchAll($db, $stmt) {
+    $result = $db->query($stmt);
+    if (!$result) return false;
+
+    $values = array();
+    while($value = $result->fetchArray(\SQLITE3_NUM)) {
+        $values[] = $value[0];
+    }
+    return $values;
   }
 
   private static function newExchange() {

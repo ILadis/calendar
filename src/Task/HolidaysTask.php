@@ -3,7 +3,7 @@
 namespace CalDAV\Task;
 
 use DateTime;
-use CalDAV\Calendar;
+use CalDAV\Task\Backend;
 
 use Sabre\HTTP;
 use Sabre\VObject\Component\VCalendar;
@@ -13,7 +13,7 @@ class HolidaysTask implements Task {
   private $backend = null;
   private $client = null;
 
-  public function __construct(Calendar\Backend\BackendInterface $backend, ?HTTP\Client $client = null) {
+  public function __construct(Backend\BackendInterface $backend, ?HTTP\Client $client = null) {
     $this->backend = $backend;
     $this->client = $client ?? new HTTP\Client();
   }

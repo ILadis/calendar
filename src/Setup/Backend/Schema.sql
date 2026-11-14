@@ -109,11 +109,11 @@ CREATE TABLE IF NOT EXISTS "principals" (
 
 CREATE INDEX IF NOT EXISTS "principals_email_lower" ON "principals" (LOWER("email"));
 
-CREATE TABLE IF NOT EXISTS groupmembers (
+CREATE TABLE IF NOT EXISTS "groupmembers" (
   "id" INTEGER PRIMARY KEY ASC NOT NULL,
   "principal_id" INTEGER NOT NULL,
   "member_id" INTEGER NOT NULL,
-  UNIQUE(principal_id, member_id)
+  UNIQUE("principal_id", "member_id")
 );
 
 CREATE INDEX IF NOT EXISTS "groupmembers_member_id" ON "groupmembers" ("member_id");

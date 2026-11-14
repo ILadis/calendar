@@ -48,8 +48,8 @@ class Server {
     $logPlugin = new \CalDAV\Logging\Plugin();
     $server->addPlugin($logPlugin);
 
-    $calendarBackend = new \CalDAV\Calendar\Backend\PDO($pdo);
-    $taskPlugin = new \CalDAV\Task\Plugin($calendarBackend);
+    $taskBackend = new \CalDAV\Task\Backend\PDO($pdo);
+    $taskPlugin = new \CalDAV\Task\Plugin($taskBackend);
     $server->addPlugin($taskPlugin);
 
     $server->start();

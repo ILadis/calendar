@@ -3,7 +3,7 @@
 namespace CalDAV\Task;
 
 use PHPUnit\Framework\TestCase;
-use CalDAV\Calendar;
+use CalDAV\Task;
 use Sabre\CalDAV;
 use Sabre\HTTP;
 
@@ -14,7 +14,7 @@ class HolidaysTaskTest extends TestCase {
   private $sut;
   
   protected function setUp(): void {
-    $this->backend = $this->createStub(Calendar\Backend\BackendInterface::class);
+    $this->backend = $this->createStub(Task\Backend\BackendInterface::class);
     $this->client = $this->createStub(HTTP\Client::class);
     $this->sut = new HolidaysTask($this->backend, $this->client);
   }
