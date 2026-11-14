@@ -19,8 +19,8 @@ class HolidaysTask extends Task {
   }
 
   public function run(string $principal, array $params): bool {
-    if (parent::param($params, 'year',  '/[0-9]{4}/', $year)  != 1 ||
-        parent::param($params, 'state', '/[A-Z]{2}/', $state) != 1) {
+    if (Task::param($params, 'year',  '/[0-9]{4}/', $year)  != 1 ||
+        Task::param($params, 'state', '/[A-Z]{2}/', $state) != 1) {
       return false;
     }
 

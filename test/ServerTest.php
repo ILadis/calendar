@@ -125,7 +125,7 @@ class ServerTest extends TestCase {
     $http->getRequest()->setMethod('POST');
     $http->getRequest()->setUrl('/calendar/tasks/unregister');
     $http->getRequest()->setHeader('Authorization', "Basic {$authz}");
-    $http->getRequest()->setBody('{"principals": ["principals/user1"]}');
+    $http->getRequest()->setBody('{"user": "user1"}');
 
     // act
     Server::run('/calendar', 'temp.sqlite', $http);
@@ -133,7 +133,7 @@ class ServerTest extends TestCase {
     // assert
     $this->assertEquals(200, $http->getResponse()->getStatus());
     $this->assertEquals([2], $this->fetchAll($db, "SELECT id FROM principals"));
-    $this->assertEquals([3], $this->fetchAll($db, "SELECT id FROM calendars"));
+    $this->assertEquals([2, 3], $this->fetchAll($db, "SELECT id FROM calendars"));
     $this->assertEquals([4], $this->fetchAll($db, "SELECT id FROM calendarinstances"));
   }
 

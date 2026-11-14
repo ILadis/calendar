@@ -13,9 +13,9 @@ class TodosTask extends Task {
   }
 
   public function run(string $principal, array $params): bool {
-    if (parent::param($params, 'principals', '/principals\/[a-z0-9]+/', $principals) <= 0 ||
-        parent::param($params, 'title', '/.+/',      $title) != 1 ||
-        parent::param($params, 'uri',   '/[a-z-]+/', $uri)   != 1) {
+    if (Task::param($params, 'principals', '/principals\/[a-z0-9]+/', $principals) <= 0 ||
+        Task::param($params, 'title', '/.+/',      $title) != 1 ||
+        Task::param($params, 'uri',   '/[a-z-]+/', $uri)   != 1) {
       return false;
     }
 

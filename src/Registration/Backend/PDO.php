@@ -12,7 +12,7 @@ class PDO implements BackendInterface {
   }
 
   public function isPending(string $username): bool {
-    $stmt = $this->pdo->prepare('SELECT count(*) AS count FROM '.$this->tableName.' WHERE username = ? AND completed IS NULL');
+    $stmt = $this->pdo->prepare('SELECT COUNT(*) AS count FROM '.$this->tableName.' WHERE username = ? AND completed IS NULL');
     $stmt->execute([$username]);
 
     $result = $stmt->fetch(\PDO::FETCH_ASSOC);

@@ -13,11 +13,11 @@ class UnregisterTask extends Task {
   }
 
   public function run(string $principal, array $params): bool {
-    if (parent::param($params, 'principals', '/principals\/[a-z0-9]+/', $principals) != 1) {
+    if (Task::param($params, 'user', '/[a-zA-Z0-9]+/', $user) != 1) {
       return false;
     }
 
-    return $this->backend->deletePrincipal(current($principals));
+    return $this->backend->unregisterUser(current($user));
   }
 }
 

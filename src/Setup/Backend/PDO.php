@@ -12,7 +12,7 @@ class PDO implements BackendInterface {
   }
 
   public function hasSchema(): bool {
-    $query = 'SELECT count(*) AS count FROM '.$this->tableName.' WHERE type = ?';
+    $query = 'SELECT COUNT(*) AS count FROM '.$this->tableName.' WHERE type = ?';
     $stmt = $this->pdo->prepare($query);
     $stmt->execute(['table']);
 

@@ -58,6 +58,23 @@ class PDO extends AbstractBasic implements BackendInterface {
 
     return $valid;
   }
+
+  public function deleteUser(string $username): false|string {
+    $uri = 'principals/'. strtolower($username);
+
+    $stmt = $this->pdo->prepare('DELETE FROM principals WHERE uri = ? RETURNING id');
+    $stmt->execute([$uri]);
+
+    $principalId = $stmt->fetchColumn();
+    if (!$principalId) {
+      return false;
+    }
+
+    $stmt = $this->pdo->prepare('DELETE FROM groupmembers WHERE principal_id = ?');
+    $stmt->execute([$principalId]);
+
+    return $uri;
+  }
 }
 
 ?>
