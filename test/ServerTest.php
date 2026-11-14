@@ -4,6 +4,7 @@ namespace CalDAV;
 
 use PHPUnit\Framework\TestCase;
 use Sabre\HTTP;
+use CalDAV\ConsoleLogger;
 
 class ServerTest extends TestCase {
 
@@ -11,7 +12,7 @@ class ServerTest extends TestCase {
     @unlink('temp.sqlite');
 
     $http = self::newExchange();
-    Server::run('/calendar', 'temp.sqlite', $http);
+    Server::run('/', 'temp.sqlite', $http);
 
     // TODO silence consoler logger on first exchange/run
   }
@@ -95,7 +96,7 @@ class ServerTest extends TestCase {
 
     $http = self::newExchange();
     $http->getRequest()->setMethod('POST');
-    $http->getRequest()->setUrl('/calendar/todos');
+    $http->getRequest()->setUrl('/calendar/tasks/todos');
     $http->getRequest()->setHeader('Authorization', "Basic {$authz}");
     $http->getRequest()->setBody('{"principals": ["principals/user1", "principals/newuser"], "title": "Yet another TODO list", "uri": "yatodol"}');
 
@@ -103,7 +104,7 @@ class ServerTest extends TestCase {
     Server::run('/calendar', 'temp.sqlite', $http);
 
     // assert
-    $this->assertEquals(201, $http->getResponse()->getStatus());
+    $this->assertEquals(200, $http->getResponse()->getStatus());
     $this->assertEquals(2, $db->querySingle("SELECT count(*) FROM calendarinstances WHERE access=3 AND displayname='Yet another TODO list'"));
   }
 

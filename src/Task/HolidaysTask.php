@@ -3,27 +3,35 @@
 namespace CalDAV\Task;
 
 use DateTime;
+use CalDAV\Calendar;
 
 use Sabre\HTTP;
 use Sabre\VObject\Component\VCalendar;
 
 class HolidaysTask implements Task {
 
-  private $client;
+  private $backend = null;
+  private $client = null;
 
-  public function __construct($client = null) {
+  public function __construct(Calendar\Backend\BackendInterface $backend, ?HTTP\Client $client = null) {
+    $this->backend = $backend;
     $this->client = $client ?? new HTTP\Client();
   }
 
-  public function run(array $params): ?array {
+  public function run(string $principal, array $params): bool {
     $valid = $this->verifyParams($params, $year, $state);
     if (!$valid) {
-      return null;
+      return false;
+    }
+
+    $calendarId = $this->backend->findCalendarId($principal, 'holidays');
+    if (!$calendarId) {
+      return false;
     }
 
     $json = $this->fetchResource($year, $state);
     if (!$json) {
-      return null;
+      return false;
     }
 
     $events = array();
@@ -35,7 +43,11 @@ class HolidaysTask implements Task {
       }
     }
 
-    return $events;
+    foreach ($events as $event) {
+      $this->backend->saveEvent($calendarId, $event);
+    }
+
+    return true;
   }
 
   private function verifyParams(array $params, &$year, &$state): bool {

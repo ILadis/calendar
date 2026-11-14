@@ -15,7 +15,7 @@ class Server {
       new \Sabre\CalDAV\Principal\Collection($principalBackend),
       new \Sabre\CalDAV\CalendarRoot($principalBackend, $calendarBackend),
     ], $sapi);
-    $server->setBaseUri('/calendar');
+    $server->setBaseUri($baseUri);
 
     $authBackend = new \CalDAV\User\Backend\PDO($pdo);
     $authPlugin = new \Sabre\DAV\Auth\Plugin($authBackend);
@@ -48,12 +48,9 @@ class Server {
     $logPlugin = new \CalDAV\Logging\Plugin();
     $server->addPlugin($logPlugin);
 
+    $calendarBackend = new \CalDAV\Calendar\Backend\PDO($pdo);
     $taskPlugin = new \CalDAV\Task\Plugin($calendarBackend);
     $server->addPlugin($taskPlugin);
-
-    $adminBackend = new \CalDAV\Admin\Backend\PDO($pdo);
-    $adminPlugin = new \CalDAV\Admin\Plugin($adminBackend);
-    $server->addPlugin($adminPlugin);
 
     $server->start();
   }

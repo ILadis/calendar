@@ -2,15 +2,13 @@
 
 namespace CalDAV\Task;
 
+use CalDAV\Calendar;
 use CalDAV\ConsoleLogger;
 
-use Sabre\CalDAV;
 use Sabre\DAV\Server;
 use Sabre\DAV\ServerPlugin;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
-use Sabre\VObject;
-use Sabre\VObject\Component\VCalendar;
 
 class Plugin extends ServerPlugin {
 
@@ -18,7 +16,7 @@ class Plugin extends ServerPlugin {
   private $logger = null;
   private $auth = null;
 
-  public function __construct(CalDAV\Backend\BackendInterface $backend) {
+  public function __construct(Calendar\Backend\BackendInterface $backend) {
     $this->backend = $backend;
     $this->logger = ConsoleLogger::for(Plugin::class);
   }
@@ -58,7 +56,7 @@ class Plugin extends ServerPlugin {
     }
 
     $name = $matches[1];
-    $successful = $this->runTask($name, $params);
+    $successful = $this->runTask($name, $principal, $params);
     if (!$successful) {
       $response->setStatus(500);
       return false;
@@ -68,86 +66,19 @@ class Plugin extends ServerPlugin {
     return false;
   }
 
-  // TODO consider separate class for better testing
-  private function runTask(string $name, array $params): bool {
+  private function runTask(string $name, string $principal, array $params): bool {
     $task = $this->findTask($name);
     if (!$task) {
       return false;
     }
 
-    $calendarId = $this->findCalendarId($name);
-    if (!$calendarId) {
-      return false;
-    }
-
-    $events = $task->run($params);
-    if (!$events) {
-      return false;
-    }
-
-    foreach ($events as $event) {
-      $this->saveEvent($calendarId, $event);
-    }
-
-    return true;
+    return $task->run($principal, $params);
   }
 
   private function findTask(string $name): ?Task {
     $name = ucfirst($name);
     $cls = "\\CalDAV\\Task\\{$name}Task";
-    return new $cls();
-  }
-
-  private function findCalendarId(string $uri): ?array {
-    $principal = $this->auth->getCurrentPrincipal();
-    $calendars = $this->backend->getCalendarsForUser($principal);
-
-    foreach ($calendars as $calendar) {
-      if ($calendar['uri'] == $uri) {
-        return $calendar['id'];
-      }
-    }
-
-    return null;
-  }
-
-  private function saveEvent(array $calendarId, VCalendar $event): void {
-    $uid = strval($event->VEVENT->UID);
-    $uri = "{$uid}.ics";
-
-    $object = $this->backend->getCalendarObject($calendarId, $uri);
-    $data = $event->serialize();
-
-    if (!$object) {
-      $this->logger->info("Creating event '{$uid}'");
-      $this->backend->createCalendarObject($calendarId, $uri, $data);
-    }
-
-    else if ($this->shouldUpdate($object, $event)) {
-      $this->logger->info("Updating event '{$uid}'");
-      $this->backend->updateCalendarObject($calendarId, $uri, $data);
-    }
-  }
-
-  private function shouldUpdate(array $object, VCalendar $event): bool {
-    $other = VObject\Reader::read($object['calendardata']);
-
-    foreach ($event->VEVENT->children() as $child) {
-      $key = strval($child->name);
-
-      if ($key == 'DTSTAMP') {
-        continue;
-      }
-
-      $value1 = strval($event->VEVENT->$key);
-      $value2 = strval($other->VEVENT->$key);
-
-      if ($value1 != $value2) {
-        return true;
-      }
-    }
-
-    return false;
+    return new $cls($this->backend);
   }
 }
 

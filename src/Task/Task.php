@@ -3,7 +3,7 @@
 namespace CalDAV\Task;
 
 interface Task {
-  public function run(array $params): ?array;
+  public function run(string $principal, array $params): bool;
 }
 
 ?>
